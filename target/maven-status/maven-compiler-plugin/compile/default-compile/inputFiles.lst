@@ -1,47 +1,55 @@
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\AuthController.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\ChatController.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\FileController.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\HealthController.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\ChatSessionEntity.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\MessageEntity.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\UserEntity.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\mapper\MessageMapper.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\mapper\UserMapper.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataChatSessionRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataMessageRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataUserRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\ChatSessionResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\CreateSessionRequest.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\ErrorResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\FileUploadResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\HealthResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\LoginRequest.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\LoginResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\MessageResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\MessageRole.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\RegisterRequest.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\RegisterResponse.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\SendMessageRequest.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\AuthUseCase.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\FileUploadUseCase.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\MessageUseCase.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\ChatSessionRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\FileStorageService.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\MessageRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\UserRepository.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\ChatIaBeApplication.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\DomainException.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\FileSizeExceededException.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\UnsupportedFileFormatException.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\ChatSession.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\FileAttachment.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\Message.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\User.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\CorsConfig.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\FileUploadConfig.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\SecurityConfig.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\SwaggerConfig.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\exception\GlobalExceptionHandler.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\CustomUserDetailsService.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\JwtAuthenticationFilter.java
-C:\Users\João.DESKTOP-M8N3B6A\Downloads\Trabalho IA\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\JwtTokenProvider.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\AuthController.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\ChatController.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\FileController.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\in\web\HealthController.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\ChatSessionEntity.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\MessageEntity.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\entity\UserEntity.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\impl\ChatSessionRepositoryImpl.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\impl\FileStorageServiceImpl.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\impl\MessageRepositoryImpl.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\impl\UserRepositoryImpl.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\mapper\ChatSessionMapper.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\mapper\MessageMapper.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\mapper\UserMapper.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataChatSessionRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataMessageRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\adapter\out\persistence\repository\SpringDataUserRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\ChatSessionResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\CreateSessionRequest.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\ErrorResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\FileUploadResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\HealthResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\LoginRequest.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\LoginResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\MessageResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\MessageRole.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\RegisterRequest.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\RegisterResponse.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\dto\SendMessageRequest.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\AuthUseCase.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\FileUploadUseCase.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\inbound\MessageUseCase.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\ChatSessionRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\FileStorageService.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\MessageRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\port\outbound\UserRepository.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\service\AuthService.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\service\FileUploadService.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\application\service\MessageService.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\ChatIaBeApplication.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\DomainException.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\FileSizeExceededException.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\exception\UnsupportedFileFormatException.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\ChatSession.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\FileAttachment.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\Message.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\domain\model\User.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\CorsConfig.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\FileUploadConfig.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\SecurityConfig.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\config\SwaggerConfig.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\exception\GlobalExceptionHandler.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\CustomUserDetailsService.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\JwtAuthenticationFilter.java
+C:\Users\vaugu\.vscode\API-BACK-IA\src\main\java\br\com\chatiabe\infra\security\JwtTokenProvider.java
