@@ -1,0 +1,527 @@
+{
+	"info": {
+		"name": "Chat IA API",
+		"description": "Collection de testes para a API do Chat IA\n\nFluxo recomendado:\n1. Health Check\n2. Register\n3. Login (automaticamente guarda o token)\n4. Create Session\n5. Send Message\n6. Get Messages\n7. List Sessions\n8. Upload File\n9. Download File",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "sessionId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "fileId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Resposta contém UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": ["{{base_url}}"],
+					"path": ["health"]
+				}
+			}
+		},
+		{
+			"name": "2. Register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+							"pm.test(\"Resposta tem id\", () => pm.expect(pm.response.json().id).to.not.be.null);",
+							"pm.test(\"Resposta tem username\", () => pm.expect(pm.response.json().username).to.eql(\"admin\"));",
+							"pm.environment.set(\"userId\", pm.response.json().id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\",\n  \"email\": \"admin@test.com\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/register",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "register"]
+				}
+			}
+		},
+		{
+			"name": "2b. Register — Erro (username duplicado)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+							"pm.test(\"Mensagem de erro\", () => pm.expect(pm.response.json().message).to.include(\"Username already in use\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\",\n  \"email\": \"admin@test.com\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/register",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "register"]
+				}
+			}
+		},
+		{
+			"name": "3. Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Resposta tem token\", () => pm.expect(pm.response.json().token).to.not.be.null);",
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"token\", jsonData.token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/login",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "login"]
+				}
+			}
+		},
+		{
+			"name": "3b. Login — Erro (senha errada)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 401\", () => pm.response.to.have.status(401));",
+							"pm.test(\"Mensagem de erro\", () => pm.expect(pm.response.json().message).to.include(\"Invalid username or password\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"senha_errada\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/auth/login",
+					"host": ["{{base_url}}"],
+					"path": ["auth", "login"]
+				}
+			}
+		},
+		{
+			"name": "4. Criar Sessão",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+							"pm.test(\"Resposta tem id\", () => pm.expect(pm.response.json().id).to.not.be.null);",
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"sessionId\", jsonData.id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\": \"Minha Primeira Conversa\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/chat/sessions",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "sessions"]
+				}
+			}
+		},
+		{
+			"name": "5. Listar Sessões",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Resposta é array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/chat/sessions",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "sessions"]
+				}
+			}
+		},
+		{
+			"name": "6. Enviar Mensagem",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Role é USER\", () => pm.expect(pm.response.json().role).to.eql(\"USER\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"chatSessionId\": \"{{sessionId}}\",\n  \"content\": \"Olá IA, tudo bem?\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/chat/messages",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "messages"]
+				}
+			}
+		},
+		{
+			"name": "6b. Enviar Mensagem — Erro (sessão inválida)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+							"pm.test(\"Mensagem de erro\", () => pm.expect(pm.response.json().message).to.include(\"ChatSession not found\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"chatSessionId\": \"00000000-0000-0000-0000-000000000000\",\n  \"content\": \"teste\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/chat/messages",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "messages"]
+				}
+			}
+		},
+		{
+			"name": "7. Ver Histórico de Mensagens",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Resposta é array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+							"pm.test(\"Tem pelo menos 1 mensagem\", () => pm.expect(pm.response.json().length).to.be.at.least(1));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/chat/sessions/{{sessionId}}/messages",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "sessions", "{{sessionId}}", "messages"]
+				}
+			}
+		},
+		{
+			"name": "7b. Ver Histórico — Erro (sessão inexistente)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/chat/sessions/00000000-0000-0000-0000-000000000000/messages",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "sessions", "00000000-0000-0000-0000-000000000000", "messages"]
+				}
+			}
+		},
+		{
+			"name": "8. Upload Ficheiro",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"pm.test(\"Resposta tem fileId\", () => pm.expect(pm.response.json().fileId).to.not.be.null);",
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.collectionVariables.set(\"fileId\", jsonData.fileId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "",
+							"description": "Seleciona um ficheiro .txt ou .pdf (máx 5MB)"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/chat/files",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "files"]
+				}
+			}
+		},
+		{
+			"name": "8b. Upload Ficheiro — Erro (formato inválido)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 400\", () => pm.response.to.have.status(400));",
+							"pm.test(\"Mensagem de erro\", () => pm.expect(pm.response.json().message).to.include(\"Only .txt and .pdf\"));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "",
+							"description": "Seleciona um ficheiro .jpg ou .png para testar o erro"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/chat/files",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "files"]
+				}
+			}
+		},
+		{
+			"name": "9. Download Ficheiro",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": {
+					"raw": "{{base_url}}/chat/files/{{fileId}}",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "files", "{{fileId}}"]
+				}
+			}
+		},
+		{
+			"name": "10. Não Autenticado (401)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 401\", () => pm.response.to.have.status(401));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/chat/sessions",
+					"host": ["{{base_url}}"],
+					"path": ["chat", "sessions"]
+				}
+			}
+		}
+	]
+}

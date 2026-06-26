@@ -1,0 +1,10 @@
+br\com\chatiabe\adapter\in\web\ChatFlowIntegrationTest$1.class
+br\com\chatiabe\adapter\in\web\AuthIntegrationTest.class
+br\com\chatiabe\domain\model\UserTest.class
+br\com\chatiabe\application\service\FileUploadServiceTest.class
+br\com\chatiabe\application\service\MessageServiceTest.class
+br\com\chatiabe\domain\model\FileAttachmentTest.class
+br\com\chatiabe\adapter\in\web\ChatFlowIntegrationTest.class
+br\com\chatiabe\domain\model\ChatSessionTest.class
+br\com\chatiabe\application\service\AuthServiceTest.class
+br\com\chatiabe\domain\model\MessageTest.class

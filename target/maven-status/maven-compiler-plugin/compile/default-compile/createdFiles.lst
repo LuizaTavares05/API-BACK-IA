@@ -5,11 +5,16 @@ br\com\chatiabe\domain\exception\UnsupportedFileFormatException.class
 br\com\chatiabe\adapter\in\web\AuthController.class
 br\com\chatiabe\adapter\out\persistence\repository\SpringDataMessageRepository.class
 br\com\chatiabe\application\dto\MessageResponse.class
+br\com\chatiabe\adapter\out\persistence\FileStorageAdapter.class
+br\com\chatiabe\adapter\out\persistence\UserRepositoryImpl.class
 br\com\chatiabe\application\port\outbound\UserRepository.class
 br\com\chatiabe\application\port\inbound\FileUploadUseCase.class
 br\com\chatiabe\domain\exception\FileSizeExceededException.class
 br\com\chatiabe\application\dto\SendMessageRequest.class
+br\com\chatiabe\application\service\MessageService.class
+br\com\chatiabe\adapter\out\persistence\mapper\ChatSessionMapper.class
 br\com\chatiabe\infra\exception\GlobalExceptionHandler.class
+br\com\chatiabe\adapter\out\persistence\ChatSessionRepositoryImpl.class
 br\com\chatiabe\application\dto\FileUploadResponse.class
 br\com\chatiabe\domain\model\FileAttachment.class
 br\com\chatiabe\infra\security\JwtTokenProvider.class
@@ -28,6 +33,7 @@ br\com\chatiabe\adapter\in\web\HealthController.class
 br\com\chatiabe\infra\config\FileUploadConfig.class
 br\com\chatiabe\ChatIaBeApplication.class
 br\com\chatiabe\infra\config\SwaggerConfig.class
+br\com\chatiabe\adapter\out\persistence\MessageRepositoryImpl.class
 br\com\chatiabe\adapter\in\web\FileController.class
 br\com\chatiabe\application\dto\HealthResponse.class
 br\com\chatiabe\adapter\out\persistence\entity\MessageEntity.class
@@ -39,6 +45,7 @@ br\com\chatiabe\application\dto\RegisterResponse.class
 br\com\chatiabe\domain\model\ChatSession.class
 br\com\chatiabe\domain\exception\DomainException.class
 br\com\chatiabe\application\dto\CreateSessionRequest.class
+br\com\chatiabe\application\service\FileUploadService.class
 br\com\chatiabe\application\dto\RegisterRequest.class
 br\com\chatiabe\infra\config\CorsConfig.class
 br\com\chatiabe\infra\config\SecurityConfig.class
@@ -47,4 +54,5 @@ br\com\chatiabe\adapter\out\persistence\repository\SpringDataUserRepository.clas
 br\com\chatiabe\application\dto\LoginResponse.class
 br\com\chatiabe\application\dto\ErrorResponse.class
 br\com\chatiabe\adapter\out\persistence\entity\ChatSessionEntity.class
+br\com\chatiabe\application\service\AuthService.class
 br\com\chatiabe\adapter\out\persistence\entity\MessageEntity$Role.class
