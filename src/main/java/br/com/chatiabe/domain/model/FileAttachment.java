@@ -1,64 +1,41 @@
 package br.com.chatiabe.domain.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class FileAttachment {
 
     private UUID id;
+    private UUID userId;
     private String fileName;
-    private Long fileSize;
-    private UUID chatSessionId;
-    private Instant uploadedAt;
+    private long fileSize;
+    private byte[] data;
+    private LocalDateTime uploadedAt;
 
-    public FileAttachment() {
-    }
-
-    public FileAttachment(UUID id, String fileName, Long fileSize, UUID chatSessionId, Instant uploadedAt) {
+    public FileAttachment(UUID id, UUID userId, String fileName, long fileSize, byte[] data, LocalDateTime uploadedAt) {
         this.id = id;
+        this.userId = userId;
         this.fileName = fileName;
         this.fileSize = fileSize;
-        this.chatSessionId = chatSessionId;
+        this.data = data;
         this.uploadedAt = uploadedAt;
     }
 
-    public UUID getId() {
-        return id;
+    public static FileAttachment create(UUID userId, String fileName, long fileSize, byte[] data) {
+        return new FileAttachment(
+                UUID.randomUUID(),
+                userId,
+                fileName,
+                fileSize,
+                data,
+                LocalDateTime.now()
+        );
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public Long getFileSize() {
-        return fileSize;
-    }
-
-    public void setFileSize(Long fileSize) {
-        this.fileSize = fileSize;
-    }
-
-    public UUID getChatSessionId() {
-        return chatSessionId;
-    }
-
-    public void setChatSessionId(UUID chatSessionId) {
-        this.chatSessionId = chatSessionId;
-    }
-
-    public Instant getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public void setUploadedAt(Instant uploadedAt) {
-        this.uploadedAt = uploadedAt;
-    }
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public String getFileName() { return fileName; }
+    public long getFileSize() { return fileSize; }
+    public byte[] getData() { return data; }
+    public LocalDateTime getUploadedAt() { return uploadedAt; }
 }

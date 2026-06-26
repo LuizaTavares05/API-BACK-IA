@@ -1,35 +1,25 @@
 package br.com.chatiabe.adapter.out.persistence.mapper;
 
-import br.com.chatiabe.adapter.out.persistence.entity.ChatSessionEntity;
 import br.com.chatiabe.adapter.out.persistence.entity.MessageEntity;
 import br.com.chatiabe.domain.model.Message;
 
-public final class MessageMapper {
+public class MessageMapper {
 
-    private MessageMapper() {
-    }
-
-    public static MessageEntity toEntity(Message domain, ChatSessionEntity chatSession) {
-        if (domain == null) {
-            return null;
-        }
+    public static MessageEntity toEntity(Message domain) {
         return new MessageEntity(
                 domain.getId(),
-                chatSession,
-                MessageEntity.Role.valueOf(domain.getRole().name()),
+                domain.getChatSessionId(),
+                domain.getRole(),
                 domain.getContent(),
                 domain.getTimestamp()
         );
     }
 
     public static Message toDomain(MessageEntity entity) {
-        if (entity == null) {
-            return null;
-        }
         return new Message(
                 entity.getId(),
-                entity.getChatSession().getId(),
-                Message.Role.valueOf(entity.getRole().name()),
+                entity.getChatSessionId(),
+                entity.getRole(),
                 entity.getContent(),
                 entity.getTimestamp()
         );

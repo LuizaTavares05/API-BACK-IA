@@ -4,18 +4,10 @@ spring:
       enabled: true
   jpa:
     show-sql: true
-  devtools:
-    restart:
-      enabled: false
+    hibernate:
+      ddl-auto: create-drop
 
 logging:
   level:
     br.com.chatiabe: DEBUG
     org.springframework.security: DEBUG
-
-app:
-  cors:
-    allowed-origins: http://localhost:5173
-  jwt:
-    secret: chave-secreta-temporaria-dev-chatiabe-2026
-    expiration-ms: 86400000

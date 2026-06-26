@@ -1,54 +1,33 @@
 package br.com.chatiabe.domain.model;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class ChatSession {
 
     private UUID id;
-    private String title;
     private UUID userId;
-    private Instant createdAt;
+    private String title;
+    private LocalDateTime createdAt;
 
-    public ChatSession() {
-    }
-
-    public ChatSession(UUID id, String title, UUID userId, Instant createdAt) {
+    public ChatSession(UUID id, UUID userId, String title, LocalDateTime createdAt) {
         this.id = id;
-        this.title = title;
         this.userId = userId;
+        this.title = title;
         this.createdAt = createdAt;
     }
 
-    public UUID getId() {
-        return id;
+    public static ChatSession create(UUID userId, String title) {
+        return new ChatSession(
+                UUID.randomUUID(),
+                userId,
+                title,
+                LocalDateTime.now()
+        );
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
+    public UUID getId() { return id; }
+    public UUID getUserId() { return userId; }
+    public String getTitle() { return title; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
 }

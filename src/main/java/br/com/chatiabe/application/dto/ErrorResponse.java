@@ -1,10 +1,10 @@
 package br.com.chatiabe.application.dto;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 public record ErrorResponse(
-    Integer status,
-    String error,
-    String message,
-    Instant timestamp
+        int status,
+        String error,
+        String message,
+        LocalDateTime timestamp
 ) {}

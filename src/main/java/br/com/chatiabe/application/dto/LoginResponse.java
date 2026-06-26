@@ -1,6 +1,6 @@
 package br.com.chatiabe.application.dto;
 
 public record LoginResponse(
-    String token,
-    Integer expiresIn
+        String token,
+        int expiresIn
 ) {}

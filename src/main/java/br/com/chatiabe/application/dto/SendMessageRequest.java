@@ -6,6 +6,6 @@ import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 public record SendMessageRequest(
-    @NotNull UUID chatSessionId,
-    @NotBlank @Size(max = 10000) String content
+        @NotNull UUID chatSessionId,
+        @NotBlank @Size(max = 10000) String content
 ) {}
