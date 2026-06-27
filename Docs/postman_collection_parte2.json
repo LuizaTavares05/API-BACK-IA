@@ -1,0 +1,413 @@
+{
+  "info": {
+    "name": "Chat IA Backend — Parte 2",
+    "description": "Collection for testing the Chat IA Backend API — Part 2. Includes RAG (OpenRouter + Spring AI), document ingestion, pgvector. Auto-saves JWT token on login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "sessionId",
+      "value": ""
+    },
+    {
+      "key": "documentId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('User registered successfully', () => {",
+                  "        pm.response.to.have.status(201);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"123456\",\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('authToken', 'Bearer ' + jsonData.token);",
+                  "    pm.test('Token saved to collection variables', () => {",
+                  "        pm.expect(jsonData.token).to.not.be.empty;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "GET /chat/sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "sessions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /chat/sessions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('sessionId', jsonData.id);",
+                  "    pm.test('Session ID saved: ' + jsonData.id, () => {});",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Perguntas sobre Documentos\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "sessions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messages (RAG — Evoluído)",
+      "item": [
+        {
+          "name": "POST /chat/messages (RAG)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.test('Response has sources array', () => {",
+                  "        pm.expect(jsonData).to.have.property('sources');",
+                  "    });",
+                  "    if (jsonData.sources.length > 0) {",
+                  "        console.log('Sources found:', jsonData.sources.length);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chatSessionId\": \"{{sessionId}}\",\n  \"content\": \"Qual é o faturamento mencionado no relatório?\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /chat/sessions/{sessionId}/messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/sessions/{{sessionId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "sessions", "{{sessionId}}", "messages"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "POST /chat/files (upload)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('fileId', jsonData.fileId);",
+                  "    pm.test('File ID saved: ' + jsonData.fileId, () => {});",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/chat/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "files"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /chat/files/{fileId} (download)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chat/files/{{fileId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["chat", "files", "{{fileId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documents (Novo — Parte 2)",
+      "item": [
+        {
+          "name": "POST /documents (ingest)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('documentId', jsonData.id);",
+                  "    pm.test('Document ID saved: ' + jsonData.id, () => {});",
+                  "    pm.test('Status is PROCESSING', () => {",
+                  "        pm.expect(jsonData.status).to.eql('PROCESSING');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /documents/{id} (status)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.test('Status is one of: PENDING, PROCESSING, COMPLETED, FAILED', () => {",
+                  "        pm.expect(['PENDING','PROCESSING','COMPLETED','FAILED']).to.include(jsonData.status);",
+                  "    });",
+                  "    if (jsonData.status === 'COMPLETED') {",
+                  "        pm.test('Chunks generated: ' + jsonData.chunkCount, () => {",
+                  "            pm.expect(jsonData.chunkCount).to.be.above(0);",
+                  "        });",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "{{documentId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /documents/{id}/reprocess",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.test('Status reset to PROCESSING', () => {",
+                  "        pm.expect(jsonData.status).to.eql('PROCESSING');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "{{authToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{baseUrl}}/documents/{{documentId}}/reprocess",
+              "host": ["{{baseUrl}}"],
+              "path": ["documents", "{{documentId}}", "reprocess"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
