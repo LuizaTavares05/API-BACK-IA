@@ -4,7 +4,7 @@ info:
   version: 2.0.0
   description: >
     API do sistema de chat integrado com IA — Evolução com RAG, ingestão de
-    documentos, PostgreSQL + pgvector e integração com n8n.
+    documentos, PostgreSQL + pgvector, Spring AI + OpenRouter e integração com n8n.
 
 servers:
   - url: http://localhost:8080/api

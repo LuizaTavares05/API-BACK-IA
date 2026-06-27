@@ -1,8 +1,8 @@
 # System Specification — Chat IA (Parte 2)
 
 > **Evolução:** H2 → PostgreSQL + pgvector · Pipeline RAG · Ingestão de Documentos · Integração n8n
-> **Stack:** Java 17 · Spring Boot 3.4.x · PostgreSQL 16 + pgvector · Flyway · React
-> **Arquitetura:** Clean Architecture (Parte 1 mantida + novos módulos)
+> **Stack:** Java 17 · Spring Boot 3.4.x · Spring AI 1.0.x · PostgreSQL 16 + pgvector · Flyway · React
+> **Arquitetura:** Clean Architecture (Parte 1 mantida + novos módulos + Spring AI adaptado via ports)
 
 ---
 
@@ -50,21 +50,45 @@ São dois fluxos independentes. A ingestão é assíncrona (pode ser processada 
 
 ## 2. ARQUITETURA DO BACKEND
 
-### 2.1 Novos serviços e responsabilidades
+### 2.1 Padrão de integração com Spring AI
+
+A Parte 2 usa **Spring AI** como framework de abstração para comunicação com provedores de IA, mas **sem vazar essa dependência para as camadas internas**. O padrão é:
+
+```
+application/port/outbound/
+├── EmbeddingProvider.java     ← interface sua (porta de saída)
+└── LlmProvider.java           ← interface sua (porta de saída)
+
+infra/ai/
+├── SpringAiEmbeddingAdapter.java  ← implementa EmbeddingProvider usando Spring AI EmbeddingModel
+└── SpringAiLlmAdapter.java        ← implementa LlmProvider usando Spring AI ChatModel
+```
+
+**Vantagens:**
+- `application` permanece puro, sem dependência de Spring AI
+- Trocando o adaptador em `infra/ai/`, troca-se o provedor sem alterar orquestração
+- Spring AI gerencia retry, timeout, parsing, rate limit automaticamente
+- OpenRouter usa API compatível com OpenAI → Spring AI `openai-spring-starter` funciona direto
+
+Para o webhook do n8n, usa-se **RestClient** (Spring Boot 3.2+) — cliente HTTP síncrono moderno, sem WebFlux.
+
+### 2.2 Novos serviços e responsabilidades
 
 | Serviço | Camada | Responsabilidade |
 |---------|--------|-----------------|
 | `DocumentIngestionUseCase` | application.port.inbound | Contrato para pipeline de ingestão de documentos |
 | `DocumentIngestionService` | application.service | Orquestra parsing, chunking, embedding e persistência de chunks |
 | `EmbeddingUseCase` | application.port.inbound | Contrato para gerar embeddings |
-| `EmbeddingService` | application.service | Gera embeddings (agnóstico ao domínio); chama provedor externo |
+| `EmbeddingService` | application.service | Gera embeddings (agnóstico ao domínio); delega a `EmbeddingProvider` |
 | `RagUseCase` | application.port.inbound | Contrato para orquestração RAG |
 | `RagService` | application.service | Orquestrador puro: embedding da query → busca vetorial → montagem de prompt → retorno com sources |
+| `EmbeddingProvider` | application.port.outbound | Contrato para gerar vetores de embedding (implementado via Spring AI) |
+| `LlmProvider` | application.port.outbound | Contrato para gerar respostas via LLM (implementado via Spring AI) |
 | `DocumentRepository` | application.port.outbound | Persistência de documentos (metadados) |
 | `DocumentChunkRepository` | application.port.outbound | Persistência de chunks + suporte a busca por similaridade vetorial |
 | `WebhookNotifier` | application.port.outbound | Dispara notificação assíncrona para n8n após indexação |
 
-### 2.2 Métodos públicos esperados por serviço
+### 2.3 Métodos públicos esperados por serviço
 
 **`DocumentIngestionUseCase`:**
 ```
@@ -84,7 +108,7 @@ generateEmbeddings(texts: List<String>): List<float[]>
 sendMessageWithContext(request: SendMessageRequest, userId: UUID): RagMessageResponse
 ```
 
-### 2.3 Contratos de entrada e saída de cada serviço
+### 2.4 Contratos de entrada e saída de cada serviço
 
 **DocumentIngestionService:**
 
@@ -97,7 +121,7 @@ sendMessageWithContext(request: SendMessageRequest, userId: UUID): RagMessageRes
 
 | Entrada | Saída |
 |---------|-------|
-| `String text` | `float[] embeddingVector` (ex: 768 ou 1536 dimensões) |
+| `String text` | `float[] embeddingVector` (1536 dimensões — text-embedding-3-small) |
 | `List<String> texts` | `List<float[]>` |
 
 **RagService:**
@@ -108,7 +132,7 @@ sendMessageWithContext(request: SendMessageRequest, userId: UUID): RagMessageRes
 
 Onde `Source = { documentId, documentName, chunkIndex, excerpt, score }`.
 
-### 2.4 Responsabilidades detalhadas
+### 2.5 Responsabilidades detalhadas
 
 **Parsing (dentro de DocumentIngestionService)**
 - Extrair texto bruto de `.txt` (leitura direta) e `.pdf` (via lib externa — Apache PDFBox ou similar)
@@ -120,10 +144,18 @@ Onde `Source = { documentId, documentName, chunkIndex, excerpt, score }`.
 - Parâmetros: `CHUNK_SIZE=1000` caracteres, `CHUNK_OVERLAP=200` caracteres
 - Cada chunk preserva metadados: `documentId`, `chunkIndex`, `content`, `metadata` (JSON com página aproximada ou seção)
 
-**Embedding (EmbeddingService)**
-- Recebe texto de cada chunk → chama provedor de embedding externo (ex: OpenAI Ada, Sentence Transformers via API)
+**Embedding (EmbeddingService → EmbeddingProvider → Spring AI)**
+- Recebe texto de cada chunk → delega a `EmbeddingProvider` (porta de saída)
+- `EmbeddingProvider` é implementado por `SpringAiEmbeddingAdapter` que usa `EmbeddingModel` do Spring AI
+- Provedor real: **OpenRouter** com modelo `text-embedding-3-small` (1536 dimensões)
 - Retorna vetor `float[]` de dimensionalidade fixa (configurável via `app.embedding.dimensions`)
 - Serviço agnóstico ao domínio do documento — não conhece entidades `Document` ou `Chunk`
+
+**LLM de geração (RagService → LlmProvider → Spring AI)**
+- Recebe prompt com contexto + pergunta → delega a `LlmProvider` (porta de saída)
+- `LlmProvider` é implementado por `SpringAiLlmAdapter` que usa `ChatModel` do Spring AI
+- Provedor real: **OpenRouter** com modelo `meta-llama/llama-4-scout-17b-16e-instruct`
+- A interface `LlmProvider` expõe método `generate(prompt: String): String` — sem acoplamento ao Spring AI
 
 **Persistência vetorial (DocumentChunkRepository)**
 - Suporta: `saveAll(List<DocumentChunk>)`, `findSimilar(float[] queryVector, int topK, double minSimilarity)`
@@ -134,20 +166,26 @@ Onde `Source = { documentId, documentName, chunkIndex, excerpt, score }`.
 - Dispara `POST` para URL configurada (`app.n8n.webhook-url`)
 - É assíncrono (`@Async` ou `TaskExecutor`) — não bloqueia o fluxo principal
 
-### 2.5 Relação entre serviços e repositórios
+### 2.6 Relação entre serviços, provedores e repositórios
 
 ```
-DocumentIngestionService
-  → Chama EmbeddingService (para cada chunk)
+DocumentIngestionService (application)
+  → Chama EmbeddingService (application)
+      → EmbeddingService delega a EmbeddingProvider (porta outbound)
+          → SpringAiEmbeddingAdapter (infra/ai) usa EmbeddingModel (Spring AI)
+              → OpenRouter /embeddings (text-embedding-3-small)
   → Chama DocumentRepository.save()
   → Chama DocumentChunkRepository.saveAll()
   → Chama WebhookNotifier.notify()
+      → N8nWebhookNotifier (adapter/out) usa RestClient
 
-RagService
-  → Chama EmbeddingService (para a query do usuário)
+RagService (application)
+  → Chama EmbeddingService → EmbeddingProvider → Spring AI → OpenRouter (embedding da query)
   → Chama DocumentChunkRepository.findSimilar()
   → Monta o prompt com contexto + pergunta original
-  → Chama LLM provider (externa) para gerar resposta
+  → Chama LlmProvider (porta outbound)
+      → SpringAiLlmAdapter (infra/ai) usa ChatModel (Spring AI)
+          → OpenRouter /chat/completions (meta-llama/llama-4-scout-17b-16e-instruct)
   → Chama MessageRepository.save() para persistir mensagem ASSISTANT
   → Retorna RagMessageResponse com sources
 ```
@@ -431,7 +469,7 @@ sequenceDiagram
 ### 5.2 Como os embeddings serão armazenados
 
 - Coluna `embedding` usa tipo `vector(n)` do pgvector
-- Dimensionalidade `n` configurável via `app.embedding.dimensions` (ex: 768 para sentence-transformers, 1536 para OpenAI Ada-002)
+- Dimensionalidade `n` = 1536 (modelo `text-embedding-3-small` do OpenRouter), configurável via `app.embedding.dimensions`
 - Índice IVFFlat para busca aproximada por similaridade:
 
 ```sql
@@ -616,18 +654,17 @@ O backend **não depende** do n8n. Se o webhook não estiver configurado, o flux
 | `DATASOURCE_PASSWORD` | Sim | — | Senha PostgreSQL |
 | `APP_JWT_SECRET` | Sim | — | Chave HMAC-SHA256 (mín. 256 bits) |
 | `APP_JWT_EXPIRATION` | Não | 86400 | Expiração JWT em segundos |
-| `APP_EMBEDDING_DIMENSIONS` | Sim | 768 | Dimensionalidade do vetor pgvector |
-| `APP_EMBEDDING_API_URL` | Sim | — | URL do provedor de embedding |
-| `APP_EMBEDDING_API_KEY` | Sim | — | API key do provedor |
-| `APP_EMBEDDING_MODEL` | Não | default | Modelo de embedding |
+| `OPENROUTER_API_KEY` | Sim | — | Chave de API do OpenRouter (única para embedding + LLM) |
+| `SPRING_AI_OPENAI_API_KEY` | Sim | — | Mesmo valor de `OPENROUTER_API_KEY` (Spring AI usa `spring.ai.openai.api-key`) |
+| `SPRING_AI_OPENAI_BASE_URL` | Não | `https://api.openrouter.ai/v1` | OpenRouter (compatível com OpenAI) |
+| `SPRING_AI_OPENAI_CHAT_MODEL` | Não | `meta-llama/llama-4-scout-17b-16e-instruct` | Modelo de chat no OpenRouter |
+| `SPRING_AI_OPENAI_EMBEDDING_MODEL` | Não | `text-embedding-3-small` | Modelo de embedding no OpenRouter |
+| `APP_EMBEDDING_DIMENSIONS` | Não | 1536 | Dimensionalidade do vetor pgvector (1536 para text-embedding-3-small) |
 | `APP_N8N_WEBHOOK_URL` | Não | — | URL do webhook n8n (opcional) |
 | `APP_RAG_TOP_K` | Não | 5 | Número de chunks no retrieval |
-| `APP_RAG_MIN_SIMILARITY` | Não | 0.7 | Similaridade mínima |
+| `APP_RAG_MIN_SIMILARITY` | Não | 0.7 | Similaridade mínima (0.0 a 1.0) |
 | `APP_RAG_CHUNK_SIZE` | Não | 1000 | Tamanho do chunk em caracteres |
 | `APP_RAG_CHUNK_OVERLAP` | Não | 200 | Overlap entre chunks |
-| `APP_LLM_API_URL` | Sim | — | URL do provedor LLM para geração de respostas |
-| `APP_LLM_API_KEY` | Sim | — | API key do LLM |
-| `APP_LLM_MODEL` | Não | default | Modelo de geração |
 | `CORS_ALLOWED_ORIGINS` | Não | `http://localhost:5173` | Origens permitidas no CORS |
 
 ### 8.2 Docker Compose
@@ -663,11 +700,11 @@ services:
       DATASOURCE_USERNAME: chatiabe
       DATASOURCE_PASSWORD: chatiabe
       APP_JWT_SECRET: ${APP_JWT_SECRET}
-      APP_EMBEDDING_API_URL: ${APP_EMBEDDING_API_URL}
-      APP_EMBEDDING_API_KEY: ${APP_EMBEDDING_API_KEY}
-      APP_EMBEDDING_DIMENSIONS: ${APP_EMBEDDING_DIMENSIONS:-768}
-      APP_LLM_API_URL: ${APP_LLM_API_URL}
-      APP_LLM_API_KEY: ${APP_LLM_API_KEY}
+      SPRING_AI_OPENAI_API_KEY: ${OPENROUTER_API_KEY}
+      SPRING_AI_OPENAI_BASE_URL: https://api.openrouter.ai/v1
+      SPRING_AI_OPENAI_CHAT_MODEL: meta-llama/llama-4-scout-17b-16e-instruct
+      SPRING_AI_OPENAI_EMBEDDING_MODEL: text-embedding-3-small
+      APP_EMBEDDING_DIMENSIONS: ${APP_EMBEDDING_DIMENSIONS:-1536}
       APP_N8N_WEBHOOK_URL: ${APP_N8N_WEBHOOK_URL}
     depends_on:
       postgres:
@@ -707,20 +744,23 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+  ai:
+    openai:
+      api-key: ${SPRING_AI_OPENAI_API_KEY}
+      base-url: ${SPRING_AI_OPENAI_BASE_URL:https://api.openrouter.ai/v1}
+      chat:
+        options:
+          model: ${SPRING_AI_OPENAI_CHAT_MODEL:meta-llama/llama-4-scout-17b-16e-instruct}
+      embedding:
+        options:
+          model: ${SPRING_AI_OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
 
 app:
   jwt:
     secret: ${APP_JWT_SECRET}
     expiration: ${APP_JWT_EXPIRATION:86400}
   embedding:
-    dimensions: ${APP_EMBEDDING_DIMENSIONS:768}
-    api-url: ${APP_EMBEDDING_API_URL}
-    api-key: ${APP_EMBEDDING_API_KEY}
-    model: ${APP_EMBEDDING_MODEL:default}
-  llm:
-    api-url: ${APP_LLM_API_URL}
-    api-key: ${APP_LLM_API_KEY}
-    model: ${APP_LLM_MODEL:default}
+    dimensions: ${APP_EMBEDDING_DIMENSIONS:1536}
   n8n:
     webhook-url: ${APP_N8N_WEBHOOK_URL:}
   rag:
@@ -733,13 +773,36 @@ cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
 ```
 
-### 8.4 O que muda no README
+### 8.4 Dependências Maven adicionadas (pom.xml)
 
-- Atualizar stack (PostgreSQL + pgvector, Flyway)
+| Dependência | GroupId | Finalidade |
+|-------------|---------|------------|
+| `spring-ai-openai-spring-boot-starter` | `org.springframework.ai` | Abstração de embedding + chat via OpenRouter |
+| `postgresql` | `org.postgresql` | Driver JDBC para PostgreSQL |
+| `flyway-core` | `org.flywaydb` | Migrações de banco |
+| `pdfbox` | `org.apache.pdfbox` | Extração de texto de PDFs |
+| `spring-boot-starter-web` | `org.springframework.boot` | Já incluso (necessário para RestClient do webhook) |
+
+> **Nota:** Spring AI requer repositório `org.springframework.ai` no `pom.xml`:
+> ```xml
+> <repositories>
+>   <repository>
+>     <id>spring-milestones</id>
+>     <name>Spring Milestones</name>
+>     <url>https://repo.spring.io/milestone</url>
+>   </repository>
+> </repositories>
+> ```
+
+### 8.5 O que muda no README
+
+- Atualizar stack (PostgreSQL + pgvector, Flyway, Spring AI, OpenRouter)
 - Adicionar seção "Docker Compose" para subir PostgreSQL + pgvector
-- Adicionar seção "Variáveis de Ambiente" obrigatórias
+- Adicionar seção "Variáveis de Ambiente" obrigatórias (incluindo `OPENROUTER_API_KEY`)
+- Adicionar seção "Provedores de IA" explicando OpenRouter + Spring AI
 - Adicionar endpoints novos ao quadro de rotas
 - Adicionar descrição do fluxo RAG e exibição de sources
+- Adicionar instruções para configurar Spring AI com OpenRouter
 
 ---
 
@@ -750,7 +813,8 @@ cors:
 | Camada | Estratégia | Ferramenta |
 |--------|-----------|------------|
 | **Domain** | Testes unitários puros sem mock | JUnit 5 |
-| **Application Services** | Mock de ports de saída; testar orquestração e regras | JUnit 5 + Mockito |
+| **Application Services** | Mock de ports de saída (EmbeddingProvider, LlmProvider, repositórios); testar orquestração e regras | JUnit 5 + Mockito |
+| **Spring AI Adapters** | Teste de integração com OpenRouter (sandbox/fallback mock); testar retry e fallback | @SpringBootTest + WireMock |
 | **Adapters (persistência vetorial)** | Testcontainers com PostgreSQL + pgvector real | Testcontainers |
 | **Controllers** | Testes de contrato com mock dos serviços | @WebMvcTest + REST Assured |
 | **Integração** | Fluxo completo com container PostgreSQL + pgvector | SpringBootTest + Testcontainers |
@@ -900,8 +964,10 @@ src/main/java/br/com/chatiabe/
     │   ├── SecurityConfig.java
     │   ├── CorsConfig.java
     │   ├── SwaggerConfig.java
-    │   ├── AsyncConfig.java                    ← PARTE 2
-    │   └── EmbeddingClientConfig.java          ← PARTE 2
+    │   └── AsyncConfig.java                    ← PARTE 2
+    ├── ai/
+    │   ├── SpringAiEmbeddingAdapter.java       ← PARTE 2 (implementa EmbeddingProvider)
+    │   └── SpringAiLlmAdapter.java             ← PARTE 2 (implementa LlmProvider)
     ├── exception/
     │   └── GlobalExceptionHandler.java (modificado + novos handlers)
     └── security/
@@ -968,8 +1034,9 @@ frontend/
 2. Diagramas Mermaid (ingestão e RAG) — validar fluxo com arquitetos
 3. Contrato OpenAPI atualizado (`openapi-parte2.yaml`) — validar com frontend
 4. Docker Compose com pgvector — testar subida do container
-5. Definição do provedor de embedding (OpenAI Ada, HuggingFace, Sentence Transformers)
-6. Definição do provedor de LLM para geração de respostas RAG
+5. Chave de API do OpenRouter — validar acesso aos modelos `text-embedding-3-small` e `meta-llama/llama-4-scout-17b-16e-instruct`
+6. Versão do Spring AI (milestone) — verificar compatibilidade com Spring Boot 3.4.x
+7. Definição dos adaptadores Spring AI em `infra/ai/` — validar isolamento de camadas
 
 ### 11.2 O que precisa estar aprovado pela equipe
 
@@ -1004,7 +1071,7 @@ frontend/
 > "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para o [módulo/arquivo X]."
 
 **Fase 0 — Infraestrutura e Migrations:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para o `docker-compose.yml`, a atualização do `pom.xml` (adicionando PostgreSQL, pgvector JDBC, Flyway, Apache PDFBox), o novo `application.yml` com datasource PostgreSQL, e as migrations Flyway V1 a V8 em `src/main/resources/db/migration/`."
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para o `docker-compose.yml`, a atualização do `pom.xml` (adicionando PostgreSQL, pgvector JDBC, Flyway, Apache PDFBox, Spring AI OpenAI Starter, repositório Spring Milestones), o novo `application.yml` com datasource PostgreSQL + Spring AI + OpenRouter, e as migrations Flyway V1 a V8 em `src/main/resources/db/migration/`."
 
 **Fase 1 — Domínio:**
 > "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para as entidades de domínio `Document.java` e `DocumentChunk.java` em `br.com.chatiabe.domain.model`, com seus respectivos enums de status e factory methods, sem qualquer dependência de frameworks."
@@ -1013,22 +1080,22 @@ frontend/
 > "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para os DTOs `DocumentResponse.java`, `DocumentStatusResponse.java`, `RagMessageResponse.java`, `SourceResponse.java` como Java Records em `br.com.chatiabe.application.dto`, com validações Jakarta Bean Validation."
 
 **Fase 3 — Ports de saída:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para as interfaces `DocumentRepository.java`, `DocumentChunkRepository.java` (incluindo método `findSimilar(float[] queryVector, int topK, double minSimilarity)`) e `WebhookNotifier.java` em `br.com.chatiabe.application.port.outbound`."
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para as interfaces `EmbeddingProvider.java`, `LlmProvider.java`, `DocumentRepository.java`, `DocumentChunkRepository.java` (incluindo método `findSimilar(float[] queryVector, int topK, double minSimilarity)`) e `WebhookNotifier.java` em `br.com.chatiabe.application.port.outbound`."
 
 **Fase 4 — Adapters de persistência:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `DocumentEntity.java`, `DocumentChunkEntity.java` (com campo `embedding` mapeado como `vector(768)` via `@Column(columnDefinition = "vector(768)")`), `DocumentMapper.java`, `DocumentChunkMapper.java`, `SpringDataDocumentRepository.java`, `SpringDataDocumentChunkRepository.java` (com query nativa para similaridade vetorial), e seus adapters em `br.com.chatiabe.adapter.out.persistence`."
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `DocumentEntity.java`, `DocumentChunkEntity.java` (com campo `embedding` mapeado como `vector(1536)` via `@Column(columnDefinition = "vector(1536)")`), `DocumentMapper.java`, `DocumentChunkMapper.java`, `SpringDataDocumentRepository.java`, `SpringDataDocumentChunkRepository.java` (com query nativa para similaridade vetorial), e seus adapters em `br.com.chatiabe.adapter.out.persistence`."
 
-**Fase 5 — EmbeddingService:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `EmbeddingUseCase.java`, `EmbeddingService.java` (cliente HTTP para provedor externo de embeddings, agnóstico ao domínio), `EmbeddingProviderException.java`, e `EmbeddingClientConfig.java` em `br.com.chatiabe.infra.config`."
+**Fase 5 — EmbeddingService + Spring AI Adapter:**
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `EmbeddingUseCase.java`, `EmbeddingService.java` (delega a `EmbeddingProvider`), `EmbeddingProvider.java`, `LlmProvider.java`, `EmbeddingProviderException.java`, `SpringAiEmbeddingAdapter.java` (implementa `EmbeddingProvider` usando `EmbeddingModel` do Spring AI), e `SpringAiLlmAdapter.java` (implementa `LlmProvider` usando `ChatModel` do Spring AI), ambos em `br.com.chatiabe.infra.ai`."
 
 **Fase 6 — DocumentIngestionService + Controller:**
 > "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `DocumentIngestionUseCase.java`, `DocumentIngestionService.java` (orquestração: parse → chunk → embed → persist → notify), `DocumentProcessingException.java`, e `DocumentController.java` com endpoints `POST /api/documents`, `GET /api/documents/{id}` e `POST /api/documents/{id}/reprocess`."
 
 **Fase 7 — RagService + evolução do ChatController:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `RagUseCase.java`, `RagService.java` (orquestrador: embedding da query → busca vetorial → montagem de prompt → chamada ao LLM → persistência → retorno com sources), e a atualização do `ChatController.java` para o método `POST /api/chat/messages` retornar `RagMessageResponse` com `sources[]`."
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `RagUseCase.java`, `RagService.java` (orquestrador: embedding da query via `EmbeddingService` → busca vetorial → montagem de prompt → chamada ao `LlmProvider` → persistência → retorno com sources), e a atualização do `ChatController.java` para o método `POST /api/chat/messages` retornar `RagMessageResponse` com `sources[]`."
 
 **Fase 8 — Webhook + Async + ExceptionHandler:**
-> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `N8nWebhookNotifier.java`, `AsyncConfig.java`, `LlmProviderException.java`, e a atualização do `GlobalExceptionHandler.java` com os novos handlers para `DocumentProcessingException` (422), `EmbeddingProviderException` (503) e `LlmProviderException` (503)."
+> "A especificação está aprovada. Baseado APENAS neste documento, gere agora o código para `N8nWebhookNotifier.java` (usando `RestClient` do Spring Boot 3.2+), `AsyncConfig.java`, `LlmProviderException.java`, e a atualização do `GlobalExceptionHandler.java` com os novos handlers para `DocumentProcessingException` (422), `EmbeddingProviderException` (503) e `LlmProviderException` (503)."
 
 **Fase 9 — Frontend:**
 > "A especificação está aprovada. Baseado APENAS neste documento, crie agora a estrutura inicial do frontend React com Vite + TypeScript, implementando os componentes `ChatLayout`, `ChatSidebar`, `ChatWindow`, `MessageBubble`, `MessageSources`, `SourceCard`, `DocumentUploadButton`, `DocumentStatusBadge`, `LoginForm`, `RegisterForm`, os hooks `useAuth`, `useSessions`, `useMessages`, `useDocuments`, `useRagQuery`, e o service de API com tipagem completa."

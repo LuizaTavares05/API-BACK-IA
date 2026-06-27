@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Chat IA Backend — Parte 2",
-    "description": "Collection for testing the Chat IA Backend API — Part 2. Includes RAG, document ingestion, pgvector. Auto-saves JWT token on login.",
+    "description": "Collection for testing the Chat IA Backend API — Part 2. Includes RAG (OpenRouter + Spring AI), document ingestion, pgvector. Auto-saves JWT token on login.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
