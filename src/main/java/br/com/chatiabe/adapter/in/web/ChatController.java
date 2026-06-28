@@ -2,6 +2,7 @@ package br.com.chatiabe.adapter.in.web;
 
 import br.com.chatiabe.application.dto.*;
 import br.com.chatiabe.application.port.inbound.MessageUseCase;
+import br.com.chatiabe.application.port.inbound.RagUseCase;
 import br.com.chatiabe.infra.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,10 +17,13 @@ import java.util.UUID;
 public class ChatController {
 
     private final MessageUseCase messageUseCase;
+    private final RagUseCase ragUseCase;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public ChatController(MessageUseCase messageUseCase, JwtTokenProvider jwtTokenProvider) {
+    public ChatController(MessageUseCase messageUseCase, RagUseCase ragUseCase,
+                          JwtTokenProvider jwtTokenProvider) {
         this.messageUseCase = messageUseCase;
+        this.ragUseCase = ragUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
@@ -38,10 +42,10 @@ public class ChatController {
     }
 
     @PostMapping("/messages")
-    public ResponseEntity<MessageResponse> sendMessage(HttpServletRequest request,
-                                                       @Valid @RequestBody SendMessageRequest messageRequest) {
+    public ResponseEntity<RagMessageResponse> sendMessage(HttpServletRequest request,
+                                                          @Valid @RequestBody SendMessageRequest messageRequest) {
         UUID userId = extractUserId(request);
-        return ResponseEntity.ok(messageUseCase.sendMessage(messageRequest, userId));
+        return ResponseEntity.ok(ragUseCase.sendMessageWithContext(messageRequest, userId));
     }
 
     @GetMapping("/sessions/{sessionId}/messages")

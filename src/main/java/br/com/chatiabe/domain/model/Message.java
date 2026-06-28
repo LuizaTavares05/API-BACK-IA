@@ -29,6 +29,16 @@ public class Message {
         );
     }
 
+    public static Message createAssistantMessage(UUID chatSessionId, String content) {
+        return new Message(
+                UUID.randomUUID(),
+                chatSessionId,
+                "ASSISTANT",
+                content,
+                LocalDateTime.now()
+        );
+    }
+
     public UUID getId() { return id; }
     public UUID getChatSessionId() { return chatSessionId; }
     public String getRole() { return role; }
