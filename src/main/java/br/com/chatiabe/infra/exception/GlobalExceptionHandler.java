@@ -1,7 +1,10 @@
 package br.com.chatiabe.infra.exception;
 
 import br.com.chatiabe.application.dto.ErrorResponse;
+import br.com.chatiabe.domain.exception.DocumentProcessingException;
+import br.com.chatiabe.domain.exception.EmbeddingProviderException;
 import br.com.chatiabe.domain.exception.FileSizeExceededException;
+import br.com.chatiabe.domain.exception.LlmProviderException;
 import br.com.chatiabe.domain.exception.UnsupportedFileFormatException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.springframework.http.HttpStatus;
@@ -81,6 +84,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         return buildResponse(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
+    @ExceptionHandler(DocumentProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleDocumentProcessing(DocumentProcessingException ex) {
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+    }
+
+    @ExceptionHandler(EmbeddingProviderException.class)
+    public ResponseEntity<ErrorResponse> handleEmbeddingProvider(EmbeddingProviderException ex) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, "Provedor de embedding indisponível: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(LlmProviderException.class)
+    public ResponseEntity<ErrorResponse> handleLlmProvider(LlmProviderException ex) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, "Provedor LLM indisponível: " + ex.getMessage());
     }
 
     @ExceptionHandler(NoSuchElementException.class)

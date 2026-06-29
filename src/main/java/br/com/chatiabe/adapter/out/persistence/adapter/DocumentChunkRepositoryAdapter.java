@@ -36,10 +36,7 @@ public class DocumentChunkRepositoryAdapter implements DocumentChunkRepository {
     @Override
     public List<SimilarityResult> findSimilar(float[] queryVector, int topK, double minSimilarity, UUID userId) {
         String vectorStr = Arrays.toString(queryVector)
-                .replace('[', '(')
-                .replace(']', ')')
-                .replace(' ', ',')
-                .replace(",,", ",");
+                .replace(" ", "");
 
         List<Object[]> results = springRepo.findSimilar(vectorStr, topK, minSimilarity, userId);
 

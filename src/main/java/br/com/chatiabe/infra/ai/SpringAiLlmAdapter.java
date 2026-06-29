@@ -21,7 +21,7 @@ public class SpringAiLlmAdapter implements LlmProvider {
             return chatModel.call(new Prompt(prompt))
                     .getResult()
                     .getOutput()
-                    .getContent();
+                    .getText();
         } catch (Exception e) {
             throw new LlmProviderException("Failed to generate LLM response: " + e.getMessage(), e);
         }

@@ -18,12 +18,7 @@ public class SpringAiEmbeddingAdapter implements EmbeddingProvider {
     @Override
     public float[] generateEmbedding(String text) {
         try {
-            List<Double> vector = embeddingModel.embed(text);
-            float[] result = new float[vector.size()];
-            for (int i = 0; i < vector.size(); i++) {
-                result[i] = vector.get(i).floatValue();
-            }
-            return result;
+            return embeddingModel.embed(text);
         } catch (Exception e) {
             throw new EmbeddingProviderException("Failed to generate embedding: " + e.getMessage(), e);
         }

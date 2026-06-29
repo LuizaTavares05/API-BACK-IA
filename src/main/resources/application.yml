@@ -27,14 +27,14 @@ spring:
       max-request-size: 5MB
   ai:
     openai:
-      api-key: ${SPRING_AI_OPENAI_API_KEY}
-      base-url: ${SPRING_AI_OPENAI_BASE_URL:https://api.openrouter.ai/v1}
+      api-key: ${OPENROUTER_API_KEY}
+      base-url: ${SPRING_AI_OPENAI_BASE_URL:https://openrouter.ai/api}
       chat:
         options:
           model: ${SPRING_AI_OPENAI_CHAT_MODEL:meta-llama/llama-4-scout-17b-16e-instruct}
       embedding:
         options:
-          model: ${SPRING_AI_OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+          model: ${SPRING_AI_OPENAI_EMBEDDING_MODEL:openai/text-embedding-3-small}
 
 app:
   jwt:
