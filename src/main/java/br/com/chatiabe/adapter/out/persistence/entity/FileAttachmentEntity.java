@@ -20,7 +20,6 @@ public class FileAttachmentEntity {
     @Column(nullable = false)
     private long fileSize;
 
-    @Lob
     @Column(nullable = false)
     private byte[] data;
 

@@ -10,6 +10,7 @@ target/
 .project
 .classpath
 .vscode/
+.env
 *.swp
 *~
 .DS_Store
