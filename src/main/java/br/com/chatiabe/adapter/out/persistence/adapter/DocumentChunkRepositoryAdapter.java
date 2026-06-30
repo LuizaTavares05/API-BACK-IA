@@ -5,6 +5,7 @@ import br.com.chatiabe.adapter.out.persistence.mapper.DocumentChunkMapper;
 import br.com.chatiabe.adapter.out.persistence.repository.SpringDataDocumentChunkRepository;
 import br.com.chatiabe.application.port.outbound.DocumentChunkRepository;
 import br.com.chatiabe.domain.model.DocumentChunk;
+import org.postgresql.util.PGobject;
 import org.springframework.stereotype.Component;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,10 +48,10 @@ public class DocumentChunkRepositoryAdapter implements DocumentChunkRepository {
                     (UUID) row[1],
                     (int) row[2],
                     (String) row[3],
-                    (float[]) row[4],
+                    parsePgvector((PGobject) row[4]),
                     (String) row[5],
                     (String) row[6],
-                    (java.time.LocalDateTime) row[7]
+                    ((java.sql.Timestamp) row[7]).toLocalDateTime()
             );
             String documentName = (String) row[8];
             double score = (double) row[9];
@@ -62,5 +63,16 @@ public class DocumentChunkRepositoryAdapter implements DocumentChunkRepository {
             ));
         }
         return similarityResults;
+    }
+
+    private float[] parsePgvector(PGobject obj) {
+        String val = obj.getValue();
+        String trimmed = val.substring(1, val.length() - 1);
+        if (trimmed.isEmpty()) return new float[0];
+        String[] parts = trimmed.split(",");
+        float[] result = new float[parts.length];
+        for (int i = 0; i < parts.length; i++)
+            result[i] = Float.parseFloat(parts[i].trim());
+        return result;
     }
 }

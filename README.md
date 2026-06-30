@@ -34,6 +34,8 @@ br.com.chatiabe
 
 ## Setup e execução
 
+> **Nota para Windows (PowerShell):** use `.\.env` e `.\run.ps1` em vez dos comandos `export` abaixo. Veja a seção [Execução no Windows](#execu%C3%A7%C3%A3o-no-windows).
+
 ### 1. Subir o PostgreSQL + pgvector
 
 ```bash
@@ -72,6 +74,42 @@ A aplicação inicia em `http://localhost:8080/api`.
 ```bash
 docker compose up --build
 ```
+
+---
+
+## Execução no Windows (PowerShell)
+
+No Windows, crie um arquivo `.env` na raiz do projeto:
+
+```env
+OPENROUTER_API_KEY=sk-or-v1-...
+APP_JWT_SECRET=uma-chave-secreta-de-no-minimo-256-bits
+APP_JWT_EXPIRATION=86400
+SPRING_AI_OPENAI_API_KEY=sk-or-v1-...
+SPRING_AI_OPENAI_BASE_URL=https://api.openrouter.ai/v1
+APP_RAG_TOP_K=5
+APP_RAG_MIN_SIMILARITY=0.7
+```
+
+Depois execute com o script `run.ps1` (carrega o `.env` automaticamente):
+
+```powershell
+.\run.ps1
+```
+
+Para testar o fluxo RAG completo (upload → indexação → pergunta → resposta):
+
+```powershell
+.\test-rag.ps1
+```
+
+O script `test-rag.ps1` faz:
+1. Health check
+2. Registro/login de usuário
+3. Upload de documento `.txt`
+4. Aguarda o processamento (chunking + embedding + persistência)
+5. Cria uma sessão de chat e envia uma pergunta
+6. Exibe a resposta com as fontes utilizadas
 
 ## Endpoints
 

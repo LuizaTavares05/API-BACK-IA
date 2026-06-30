@@ -12,6 +12,7 @@ target/
 .vscode/
 .env
 .factorypath
+test-rag.ps1
 *.swp
 *~
 .DS_Store

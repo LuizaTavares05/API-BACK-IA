@@ -1,6 +1,8 @@
 package br.com.chatiabe.adapter.out.persistence.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -23,7 +25,7 @@ public class DocumentChunkEntity {
     @Column(columnDefinition = "vector(1536)", nullable = false)
     private float[] embedding;
 
-    @Column(columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String metadata;
 
     @Column(nullable = false)
