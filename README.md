@@ -27,89 +27,115 @@ br.com.chatiabe
 
 ## Pré-requisitos
 
-- JDK 17+
-- Maven 3.9+ (ou usar o `mvnw` incluído)
-- Docker (para PostgreSQL + pgvector)
-- Chave de API do [OpenRouter](https://openrouter.ai/)
+- Git
+- Docker + Docker Compose
+- Java 17+ (JDK)
+- Chave de API gratuita em [openrouter.ai/keys](https://openrouter.ai/keys)
 
 ## Setup e execução
 
-> **Nota para Windows (PowerShell):** use `.\.env` e `.\run.ps1` em vez dos comandos `export` abaixo. Veja a seção [Execução no Windows](#execu%C3%A7%C3%A3o-no-windows).
+### 1. Clonar e criar o `.env`
 
-### 1. Subir o PostgreSQL + pgvector
+```bash
+git clone <url-do-repositorio>
+cd API-BACK-IA
+```
+
+Criar arquivo `.env` na raiz com **apenas** a chave do OpenRouter:
+
+```env
+OPENROUTER_API_KEY=sk-or-v1-o-valor-gerado-no-openrouter
+```
+
+Todas as demais variáveis já têm valores padrão no `application.yml`.
+
+### 2. Subir o PostgreSQL + pgvector
 
 ```bash
 docker compose up postgres -d
 ```
 
-### 2. Configurar variáveis de ambiente
+Aguardar ~10s até o banco ficar pronto.
 
-```bash
-# Obrigatórias
-export OPENROUTER_API_KEY=sk-or-v1-...
-export APP_JWT_SECRET=uma-chave-secreta-de-no-minimo-256-bits
+### 3. Rodar a aplicação
 
-# Opcionais (com defaults)
-export APP_RAG_TOP_K=5
-export APP_RAG_MIN_SIMILARITY=0.7
-```
-
-### 3. Compilar e executar
-
-```bash
-# Compilar
-./mvnw clean compile
-
-# Executar testes
-./mvnw test
-
-# Iniciar a aplicação
-./mvnw spring-boot:run
-```
-
-A aplicação inicia em `http://localhost:8080/api`.
-
-### 4. Subir tudo com Docker Compose
-
-```bash
-docker compose up --build
-```
-
----
-
-## Execução no Windows (PowerShell)
-
-No Windows, crie um arquivo `.env` na raiz do projeto:
-
-```env
-OPENROUTER_API_KEY=sk-or-v1-...
-APP_JWT_SECRET=uma-chave-secreta-de-no-minimo-256-bits
-APP_JWT_EXPIRATION=86400
-SPRING_AI_OPENAI_API_KEY=sk-or-v1-...
-SPRING_AI_OPENAI_BASE_URL=https://api.openrouter.ai/v1
-APP_RAG_TOP_K=5
-APP_RAG_MIN_SIMILARITY=0.7
-```
-
-Depois execute com o script `run.ps1` (carrega o `.env` automaticamente):
+**Windows (PowerShell):**
 
 ```powershell
 .\run.ps1
 ```
 
-Para testar o fluxo RAG completo (upload → indexação → pergunta → resposta):
+O script `run.ps1` carrega o `.env` automaticamente e executa `./mvnw spring-boot:run`.
+
+**Linux / Mac:**
+
+```bash
+export $(grep -v '^#' .env | xargs) && ./mvnw spring-boot:run
+```
+
+**Docker (tudo de uma vez):**
+
+```bash
+docker compose up --build
+```
+
+### 4. Verificar
+
+```bash
+curl http://localhost:8080/api/health
+```
+
+→ `{"status":"UP"}`
+
+Swagger UI em [`http://localhost:8080/swagger-ui.html`](http://localhost:8080/swagger-ui.html)
+
+---
+
+## Testar o fluxo RAG completo
+
+**Windows (PowerShell):**
 
 ```powershell
 .\test-rag.ps1
 ```
 
-O script `test-rag.ps1` faz:
+O script faz:
 1. Health check
 2. Registro/login de usuário
 3. Upload de documento `.txt`
-4. Aguarda o processamento (chunking + embedding + persistência)
-5. Cria uma sessão de chat e envia uma pergunta
+4. Aguarda o processamento (chunking → embedding → persistência)
+5. Cria sessão de chat e envia pergunta
 6. Exibe a resposta com as fontes utilizadas
+
+**Linux / Mac (manual com curl):**
+
+```bash
+# Registrar
+curl -s -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"teste","password":"123456","email":"teste@email.com"}'
+
+# Login (guarde o token)
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"teste","password":"123456"}' | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+# Upload de documento
+curl -s -X POST http://localhost:8080/api/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/caminho/para/documento.txt"
+
+# Criar sessão e perguntar
+SESSION_ID=$(curl -s -X POST http://localhost:8080/api/chat/sessions \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Teste"}' | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+
+curl -s -X POST http://localhost:8080/api/chat/messages \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"chatSessionId\":\"$SESSION_ID\",\"content\":\"Sua pergunta aqui\"}"
+```
 
 ## Endpoints
 
@@ -163,14 +189,16 @@ O script `test-rag.ps1` faz:
 
 | Variável | Obrigatório | Default | Descrição |
 |----------|-------------|---------|-----------|
+| `OPENROUTER_API_KEY` | **Sim** | — | Chave de API do OpenRouter (única obrigatória) |
 | `DATASOURCE_URL` | Não | `jdbc:postgresql://localhost:5432/chatiabe` | URL do PostgreSQL |
 | `DATASOURCE_USERNAME` | Não | `chatiabe` | Usuário PostgreSQL |
 | `DATASOURCE_PASSWORD` | Não | `chatiabe` | Senha PostgreSQL |
-| `APP_JWT_SECRET` | Sim | — | Chave HMAC-SHA256 (mín. 256 bits) |
+| `APP_JWT_SECRET` | Não | *(valor fixo embutido)* | Chave HMAC-SHA256 |
 | `APP_JWT_EXPIRATION` | Não | `86400` | Expiração JWT em segundos |
-| `OPENROUTER_API_KEY` | Sim | — | Chave de API do OpenRouter |
-| `SPRING_AI_OPENAI_API_KEY` | Sim | — | Mesmo valor de `OPENROUTER_API_KEY` |
-| `SPRING_AI_OPENAI_BASE_URL` | Não | `https://api.openrouter.ai/v1` | Base URL OpenRouter |
+| `SPRING_AI_OPENAI_API_KEY` | Não | `OPENROUTER_API_KEY` | Mesma chave do OpenRouter (fallback automático) |
+| `SPRING_AI_OPENAI_BASE_URL` | Não | `https://openrouter.ai/api` | Base URL do provider |
+| `SPRING_AI_OPENAI_CHAT_MODEL` | Não | `meta-llama/llama-4-scout-17b-16e-instruct` | Modelo de chat |
+| `SPRING_AI_OPENAI_EMBEDDING_MODEL` | Não | `openai/text-embedding-3-small` | Modelo de embedding |
 | `APP_EMBEDDING_DIMENSIONS` | Não | `1536` | Dimensionalidade do vetor pgvector |
 | `APP_N8N_WEBHOOK_URL` | Não | — | URL do webhook n8n (opcional) |
 | `APP_RAG_TOP_K` | Não | `5` | Número de chunks no retrieval |
