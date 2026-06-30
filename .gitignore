@@ -11,6 +11,7 @@ target/
 .classpath
 .vscode/
 .env
+.factorypath
 *.swp
 *~
 .DS_Store
