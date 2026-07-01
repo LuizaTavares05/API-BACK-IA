@@ -22,6 +22,7 @@ public class DocumentChunkEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @JdbcTypeCode(SqlTypes.VECTOR)
     @Column(columnDefinition = "vector(1536)", nullable = false)
     private float[] embedding;
 

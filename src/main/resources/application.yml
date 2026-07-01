@@ -45,8 +45,8 @@ app:
   n8n:
     webhook-url: ${APP_N8N_WEBHOOK_URL:}
   rag:
-    top-k: ${APP_RAG_TOP_K:5}
-    min-similarity: ${APP_RAG_MIN_SIMILARITY:0.7}
+    top-k: ${APP_RAG_TOP_K:10}
+    min-similarity: ${APP_RAG_MIN_SIMILARITY:0.3}
     chunk-size: ${APP_RAG_CHUNK_SIZE:1000}
     chunk-overlap: ${APP_RAG_CHUNK_OVERLAP:200}
 
